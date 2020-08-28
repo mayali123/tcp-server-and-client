@@ -1,0 +1,84 @@
+C51 COMPILER V9.60.0.0   SERVER                                                            08/27/2020 15:31:40 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE SERVER
+OBJECT MODULE PLACED IN E:\qt_file\qt\Server_up\Server.OBJ
+COMPILER INVOKED BY: D:\Software\C51\BIN\C51.exe E:\qt_file\qt\Server_up\Server.cpp
+
+line level    source
+
+   1          ﻿#include "Server.h"
+*** ERROR C100 IN LINE 1 OF E:\qt_file\qt\Server_up\Server.cpp: unprintable character 0xEF skipped
+*** ERROR C100 IN LINE 1 OF E:\qt_file\qt\Server_up\Server.cpp: unprintable character 0xBB skipped
+*** ERROR C100 IN LINE 1 OF E:\qt_file\qt\Server_up\Server.cpp: unprintable character 0xBF skipped
+*** ERROR C141 IN LINE 1 OF E:\qt_file\qt\Server_up\Server.cpp: syntax error near '#', expected 'hdata'
+   2          
+   3          Server::Server(QWidget* parent)
+*** ERROR C129 IN LINE 3 OF E:\qt_file\qt\Server_up\Server.cpp: missing ';' before '<string>'
+   4          {
+   5              isFirst = true;
+   6              ui.setupUi(this);
+   7              this->setFixedSize(680, 570);
+   8              //通过点击启动或关闭改变监听的状态
+   9              ui.lineEdit->setText("8080");   //设置默认端口号8080
+  10              connect(ui.pushButton, &QPushButton::clicked, [=]() {
+  11                  if (myserver.isListening())     //如果服务器在监听
+  12                  {
+  13                      myserver.close();            //关闭服务器  
+  14                      mysocket->disconnectFromHost();//断开连接
+  15                      qDebug() << "关闭服务器";
+  16                      ui.pushButton->setText("启动");   //将按钮的文字改为启动
+  17                  }
+  18                  else
+  19                  {
+  20                      myserver.listen(QHostAddress::Any,ui.lineEdit->text().toUShort());//listen(const QHostAddress 
+             -&address = QHostAddress::Any, quint16 port = 0)
+  21                      qDebug() << "开启服务器";
+  22                      ui.pushButton->setText("关闭");//将按钮的文字改为关闭
+  23                  }
+  24                  });
+  25              connect(&myserver, &QTcpServer::newConnection, this, &Server::new_client);
+  26              connect(ui.pushButton_2, &QPushButton::clicked, this, &Server::send_date);
+  27              connect(ui.pushButton_3, &QPushButton::clicked, [=]() {
+  28                  ui.textBrowser->clear();
+  29                  });
+  30          }
+  31          void Server::new_client()
+  32          {
+  33              mysocket = myserver.nextPendingConnection();
+  34           
+  35              connect(mysocket,&QTcpSocket::readyRead,this,&Server::read_data);
+  36              mysocket->write("你可以发文件了");
+  37              
+  38          }
+  39          void  Server::read_data()
+  40          {
+  41              //获取信号发送者
+  42              QTcpSocket* msocket = dynamic_cast<QTcpSocket*>(sender());
+  43              //QTcpSocket* msocket = myserver.nextPendingConnection();
+  44             
+  45              //读取数据
+  46              QTextCodec* codec = QTextCodec::codecForName("GBK");
+  47              QByteArray allmeg = msocket->readAll();
+  48              //QString msg = GetCorrectUnicode(allmeg);
+  49              if (isFirst == true)
+C51 COMPILER V9.60.0.0   SERVER                                                            08/27/2020 15:31:40 PAGE 2   
+
+  50              {
+  51                  QString filename = QString(allmeg).section("##", 0, 0);
+  52                  qint64 filesize = QString(allmeg).section("##", 0, 0).toInt();
+  53                  qDebug() << "filename:" << filename << "\tfilesize:" << filesize<<endl;
+  54              }
+  55          }
+  56          
+  57          void Server::send_date()
+  58          {
+  59              QString data=ui.textEdit->toPlainText(); 
+  60              QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+  61              ui.textBrowser->append("time:" + time + "  ip:" + mysocket->localAddress().toString().remove("::ffff:"
+             -) + ":\n" + data + "\n");
+  62              mysocket->write(data.toUtf8());
+  63              ui.textEdit->clear();
+  64          }
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  5 ERROR(S)
